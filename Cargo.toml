@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/db", "crates/services", "src-tauri"]
+# The Tauri probe is a standalone package used only to verify the GNU build
+# toolchain in CI. It must not become part of the application workspace.
+exclude = ["probe/tauri-probe/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.92"
+publish = false
+
+[workspace.dependencies]
+daftar-core = { path = "crates/core" }
+daftar-db = { path = "crates/db" }
+rusqlite = { version = "0.30.0", features = ["bundled", "functions"] }
+sha2 = "0.10.9"
+thiserror = "2.0.21"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
+opt-level = "s"
+panic = "abort"

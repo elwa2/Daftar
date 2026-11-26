@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>دفتر — نموذج Tauri GNU</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a1020;
+        --bg-2: #121c32;
+        --panel: rgba(17, 28, 46, 0.88);
+        --panel-strong: #16243b;
+        --line: #243754;
+        --text: #edf3fb;
+        --muted: #9fb0c7;
+        --accent: #38bdf8;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --titlebar-h: 46px;
+        --radius: 18px;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(900px 500px at 85% -10%, #1b355a 0%, transparent 60%),
+          radial-gradient(700px 400px at 10% 110%, #10243d 0%, transparent 55%),
+          linear-gradient(180deg, var(--bg-2), var(--bg));
+        color: var(--text);
+        font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
+        overflow: hidden;
+      }
+      .app {
+        height: 100%;
+        display: grid;
+        grid-template-rows: var(--titlebar-h) 1fr;
+      }
+      .titlebar {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: stretch;
+        gap: 12px;
+        height: var(--titlebar-h);
+        padding: 0 0 0 10px;
+        background: linear-gradient(180deg, rgba(20, 33, 53, 0.96), rgba(12, 20, 35, 0.92));
+        border-bottom: 1px solid rgba(88, 120, 160, 0.18);
+        user-select: none;
+      }
+      .titlebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding-inline-start: 8px;
+      }
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, #5eead4, #38bdf8 55%, #2563eb);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 20px rgba(56,189,248,.25);
+        display: grid;
+        place-items: center;
+        color: #082033;
+        font-weight: 800;
+        font-size: 14px;
+        flex: 0 0 auto;
+      }
+      .brand-text { min-width: 0; }
+      .brand-title {
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.1;
+        white-space: nowrap;
+      }
+      .brand-sub {
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .drag-region {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(159,176,199,.65);
+        font-size: 11px;
+        letter-spacing: .02em;
+      }
+      .window-controls {
+        display: flex;
+        align-items: stretch;
+        direction: ltr;
+      }
+      .win-btn {
+        width: 46px;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, opacity .15s ease;
+      }
+      .win-btn:hover { background: rgba(255,255,255,.08); }
+      .win-btn:active { background: rgba(255,255,255,.12); }
+      .win-btn.close:hover { background: #dc2626; color: #fff; }
+      .win-btn[disabled] {
+        opacity: .35;
+        cursor: default;
+        pointer-events: none;
+      }
+      .win-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+      .content {
+        padding: 28px;
+        overflow: auto;
+        display: grid;
+        place-items: center;
+      }
+      .panel {
+        width: min(760px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 28px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.35);
+        backdrop-filter: blur(10px);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(245,158,11,.12);
+        color: #ffd48a;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .dot {
+        width: 8px; height: 8px; border-radius: 50%; background: var(--warn);
+        box-shadow: 0 0 0 4px rgba(245,158,11,.12);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 4vw, 40px);
+        line-height: 1.15;
+      }
+      p { margin: 0 0 14px; color: var(--muted); line-height: 1.8; font-size: 15px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(88,120,160,.16);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+      .value { font-size: 15px; font-weight: 700; }
+      .ok { color: var(--ok); }
+      .note {
+        margin-top: 18px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(56,189,248,.08);
+        border: 1px solid rgba(56,189,248,.18);
+        color: #cfefff;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        background: rgba(255,255,255,.06);
+        padding: 1px 6px;
+        border-radius: 6px;
+        direction: ltr;
+        display: inline-block;
+      }
+      @media (max-width: 640px) {
+        .content { padding: 16px; }
+        .panel { padding: 20px; }
+        .drag-region { display: none; }
+        .brand-sub { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="titlebar">
+        <div class="titlebar-brand" data-tauri-drag-region>
+          <div class="brand-mark" data-tauri-drag-region>د</div>
+          <div class="brand-text" data-tauri-drag-region>
+            <div class="brand-title" data-tauri-drag-region>دفتر</div>
+            <div class="brand-sub" data-tauri-drag-region>نموذج واجهة — Custom Title Bar</div>
+          </div>
+        </div>
+
+        <div class="drag-region" data-tauri-drag-region>
+          اسحب النافذة من هنا
+        </div>
+
+        <div class="window-controls" aria-label="أزرار النافذة">
+          <button class="win-btn" id="btn-min" type="button" title="تصغير" aria-label="تصغير">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10"/></svg>
+          </button>
+          <button class="win-btn" id="btn-max" type="button" title="تكبير/استعادة" aria-label="تكبير أو استعادة">
+            <svg id="icon-max" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="9" height="9" rx="1.2"/></svg>
+          </button>
+          <button class="win-btn close" id="btn-close" type="button" title="إغلاق" aria-label="إغلاق">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2 2 10"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="panel">
+          <div class="badge"><span class="dot"></span>معاينة واجهة — بدون تشغيل Rust محلياً</div>
+          <h1>شريط عنوان مخصص</h1>
+          <p>
+            هذا النموذج يعرض شريط عنوان مرسوماً داخل الواجهة بدل شريط Windows الافتراضي.
+            يمكنك معاينته مباشرة بفتح هذا الملف في المتصفح. أزرار النافذة تعمل فقط داخل
+            تطبيق Tauri؛ في المتصفح تظهر معطلة بشكل آمن.
+          </p>
+
+          <div class="grid">
+            <div class="card">
+              <div class="label">الهدف</div>
+              <div class="value">Tauri 2 + GNU</div>
+            </div>
+            <div class="card">
+              <div class="label">شريط العنوان</div>
+              <div class="value ok">Custom</div>
+            </div>
+            <div class="card">
+              <div class="label">المعاينة</div>
+              <div class="value">المتصفح / GitHub artifact</div>
+            </div>
+            <div class="card">
+              <div class="label">البناء المحلي</div>
+              <div class="value" style="color:#ffd48a">ممنوع</div>
+            </div>
+          </div>
+
+          <div class="note">
+            بناء ملف <code>.exe</code> يتم عبر GitHub Actions فقط. للتحقق البصري، افتح
+            <code>probe/tauri-probe/dist/index.html</code> في المتصفح.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        const minBtn = document.getElementById('btn-min');
+        const maxBtn = document.getElementById('btn-max');
+        const closeBtn = document.getElementById('btn-close');
+        const maxIcon = document.getElementById('icon-max');
+        const tauri = window.__TAURI__;
+        const win = tauri && tauri.window;
+        const appWindow = win && (win.getCurrentWindow ? win.getCurrentWindow() : win.appWindow);
+
+        function setDisabled(disabled) {
+          [minBtn, maxBtn, closeBtn].forEach((btn) => { btn.disabled = disabled; });
+        }
+
+        function setMaxIcon(maximized) {
+          maxIcon.innerHTML = maximized
+            ? '<rect x="3.2" y="1.2" width="7.2" height="7.2" rx="1"/><path d="M1.6 3.4v6.2a1 1 0 0 0 1 1h6.2"/>'
+            : '<rect x="1.5" y="1.5" width="9" height="9" rx="1.2"/>';
+        }
+
+        if (!appWindow) {
+          setDisabled(true);
+          document.querySelector('.drag-region').textContent = 'معاينة متصفح — أزرار النافذة معطلة';
+          return;
+        }
+
+        setDisabled(false);
+        minBtn.addEventListener('click', () => appWindow.minimize());
+        maxBtn.addEventListener('click', async () => {
+          await appWindow.toggleMaximize();
+          if (appWindow.isMaximized) setMaxIcon(await appWindow.isMaximized());
+        });
+        closeBtn.addEventListener('click', () => appWindow.close());
+
+        async function syncMax() {
+          if (!appWindow.isMaximized) return;
+          try { setMaxIcon(await appWindow.isMaximized()); } catch (_) {}
+        }
+        syncMax();
+        if (appWindow.onResized) {
+          appWindow.onResized(syncMax).catch(() => {});
+        }
+      })();
+    </script>
+  </body>
+</html>

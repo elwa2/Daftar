@@ -1,0 +1,18 @@
+# مفاتيح البناء والبيانات المحلية
+**/target/
+**/src-tauri/gen/
+ui/node_modules/
+ui/dist/
+probe/tauri-probe/node_modules/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.log
+backups/
+logs/
+.env
+.env.*
+.vscode/
+.idea/
+Thumbs.db
