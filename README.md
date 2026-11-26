@@ -51,7 +51,10 @@
 - **تطبيق Tauri الفعلي:** `src-tauri/` يحمّل `ui/` ويعرّف أوامر Rust مربوطة بـ
   `crates/services`، منها: `bootstrap`, `list_accounts`, `list_journal`,
   `get_journal_entry`, `create_draft`, `post_draft`, `void_draft`,
-  `trial_balance`, `income_statement`, `balance_sheet_report`.
+  `trial_balance`, `income_statement`, `balance_sheet_report`, `account_ledger`.
+- **اليومية:** إنشاء مسودة قيد من الواجهة (داخل Tauri)، ثم ترحيل أو إبطال المسودة.
+  القيود المرحلة تبقى محمية بواسطة SQLite triggers.
+- **التقارير:** ميزان مراجعة، قائمة دخل، ملخص ميزانية عمومية، ودفتر أستاذ لحساب محدد.
 - **بناء exe:** عبر GitHub Actions فقط (`.github/workflows/ci.yml`) كأثر
   `daftar-tauri-gnu`. لا يُبنى محلياً.
 - **مرجع alyumia:** تم أخذ اتجاهات التقارير/اليومية كتوجيه UX فقط؛ التنفيذ في دفتر

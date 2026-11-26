@@ -237,9 +237,8 @@ pub fn create_draft(
 ) -> Result<i64, String> {
     let ctx = demo_context();
     with_db(&app, &state, |db| {
-        let today = &daftar_core::clock::now_iso8601()[0..10];
         let (fiscal_year_id, fiscal_period_id) =
-            company::current_period(db, today).map_err(map_service_err)?;
+            company::period_for_date(db, &input.entry_date).map_err(map_service_err)?;
         journal::create_draft(
             db,
             &ctx,
@@ -374,6 +373,41 @@ pub fn balance_sheet_report(
                 code: r.code,
                 name_ar: r.name_ar,
                 amount: r.amount,
+            })
+            .collect())
+    })
+}
+
+#[derive(Serialize)]
+pub struct LedgerRowDto {
+    pub entry_id: i64,
+    pub entry_number: Option<i64>,
+    pub entry_date: String,
+    pub description: String,
+    pub debit: i64,
+    pub credit: i64,
+    pub running_base_balance: i64,
+}
+
+#[tauri::command]
+pub fn account_ledger(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    account_id: i64,
+) -> Result<Vec<LedgerRowDto>, String> {
+    let ctx = demo_context();
+    with_db(&app, &state, |db| {
+        Ok(reports::account_ledger(db, &ctx, account_id)
+            .map_err(map_service_err)?
+            .into_iter()
+            .map(|r| LedgerRowDto {
+                entry_id: r.entry_id,
+                entry_number: r.entry_number,
+                entry_date: r.entry_date,
+                description: r.description,
+                debit: r.debit,
+                credit: r.credit,
+                running_base_balance: r.running_base_balance,
             })
             .collect())
     })

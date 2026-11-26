@@ -152,8 +152,9 @@ fn ensure_default_accounts(db: &Database, now: &str) -> ServiceResult<()> {
     Ok(())
 }
 
-/// Returns current open fiscal year and period ids covering `today` (YYYY-MM-DD).
-pub fn current_period(db: &Database, today: &str) -> ServiceResult<(i64, i64)> {
+/// Returns an open fiscal period covering the given date.
+pub fn period_for_date(db: &Database, date: &str) -> ServiceResult<(i64, i64)> {
+    bootstrap_demo(db)?;
     db.conn
         .query_row(
             "SELECT p.fiscal_year_id, p.id
@@ -162,11 +163,16 @@ pub fn current_period(db: &Database, today: &str) -> ServiceResult<(i64, i64)> {
              WHERE p.start_date <= ?1 AND p.end_date >= ?1
                AND p.is_closed = 0 AND y.is_closed = 0
              ORDER BY p.id LIMIT 1",
-            params![today],
+            params![date],
             |r| Ok((r.get(0)?, r.get(1)?)),
         )
         .optional()?
         .ok_or(crate::error::ServiceError::NotFound(
-            "لا توجد فترة مالية مفتوحة للتاريخ الحالي",
+            "لا توجد فترة مالية مفتوحة للتاريخ المحدد",
         ))
+}
+
+/// Compatibility wrapper.
+pub fn current_period(db: &Database, today: &str) -> ServiceResult<(i64, i64)> {
+    period_for_date(db, today)
 }

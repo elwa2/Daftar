@@ -109,12 +109,36 @@
     .actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn {
       border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--text);
-      padding: 9px 14px; border-radius: 10px; cursor: default; font-size: 13px;
+      padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px;
     }
+    .btn:hover { background: rgba(255,255,255,.06); }
+    .btn:disabled { opacity: .45; cursor: default; }
     .btn.primary {
       background: linear-gradient(135deg, rgba(56,189,248,.22), rgba(94,234,212,.14));
       border-color: rgba(56,189,248,.28); color: #eafaff;
     }
+    .btn.danger { border-color: rgba(239,68,68,.35); color: #fecaca; }
+    .btn.ok { border-color: rgba(34,197,94,.35); color: #bbf7d0; }
+    dialog.entry-dialog {
+      border: 1px solid var(--line); border-radius: 16px; padding: 0; width: min(980px, calc(100vw - 24px));
+      background: #122038; color: var(--text); box-shadow: var(--shadow);
+    }
+    dialog.entry-dialog::backdrop { background: rgba(2,6,23,.62); }
+    .dialog-head { padding: 16px 18px; border-bottom: 1px solid var(--line-soft); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .dialog-body { padding: 16px 18px; display: grid; gap: 14px; }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .field input, .field select { width:100%; background: rgba(0,0,0,.14); border:1px solid var(--line); border-radius:9px; padding:9px 10px; }
+    .field.span-2 { grid-column: span 2; }
+    .lines-editor { width:100%; border-collapse: separate; border-spacing:0; min-width:0; }
+    .lines-editor th, .lines-editor td { padding:8px; border-bottom:1px solid rgba(124,156,196,.1); font-size:13px; }
+    .lines-editor input, .lines-editor select { width:100%; background: rgba(0,0,0,.14); border:1px solid var(--line); border-radius:8px; padding:7px 8px; }
+    .lines-editor .num input { text-align:left; direction:ltr; }
+    .dialog-foot { padding: 14px 18px; border-top:1px solid var(--line-soft); display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .totals { display:flex; gap:14px; font-size:13px; color:var(--muted); }
+    .totals strong { color:var(--text); direction:ltr; display:inline-block; min-width:90px; text-align:left; }
+    .form-error { color:#fecaca; font-size:13px; min-height:20px; }
+    @media (max-width: 860px) { .form-grid { grid-template-columns: 1fr 1fr; } .field.span-2 { grid-column: span 2; } }
     .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
     .stat {
       background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 16px;
@@ -222,31 +246,28 @@
       </aside>
 
       <main class="main">
-        <section class="page" id="page-dashboard">
+                <section class="page" id="page-dashboard">
           <div class="page-head">
             <div>
-              <div class="eyebrow">نظرة عامة</div>
-              <h1>لوحة التحكم</h1>
-              <p class="subtitle">ملخص سريع لحالة الشركة. الأرقام هنا للمعاينة فقط حتى يتم ربط الواجهة بخدمات التقارير.</p>
+              <div class="eyebrow">لوحة التحكم</div>
+              <h1>نظرة عامة</h1>
+              <p class="subtitle">ملخص سريع للحسابات والقيود؛ التفاصيل المالية من ميزان المراجعة والتقارير.</p>
             </div>
           </div>
-          <div class="stats">
-            <div class="stat"><div class="label">الحسابات</div><div class="value">18</div><div class="meta">شجرة تجريبية</div></div>
-            <div class="stat"><div class="label">قيود الشهر</div><div class="value">4</div><div class="meta">3 مرحلة + 1 مسودة</div></div>
-            <div class="stat"><div class="label">إجمالي المدين</div><div class="value num">23,500.00</div><div class="meta">EGP</div></div>
-            <div class="stat"><div class="label">حالة التدقيق</div><div class="value" style="color:var(--ok)">سليم</div><div class="meta">حسب تصميم المرحلة 1</div></div>
+          <div class="stats" style="margin-bottom:16px;">
+            <div class="stat"><div class="stat-label">إجمالي الحسابات</div><div class="stat-value" id="dash-accounts">0</div></div>
+            <div class="stat"><div class="stat-label">القيود</div><div class="stat-value" id="dash-entries">0</div></div>
+            <div class="stat"><div class="stat-label">مسودات</div><div class="stat-value" id="dash-drafts">0</div></div>
+            <div class="stat"><div class="stat-label">مرحّلة</div><div class="stat-value" id="dash-posted">0</div></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><div class="panel-title">آخر النشاط</div><div class="panel-hint">بيانات تجريبية</div></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>الوقت</th><th>المستخدم</th><th>الإجراء</th><th>المرجع</th></tr></thead>
-                <tbody>
-                  <tr><td class="num">2026-11-26 10:14</td><td>admin</td><td>ترحيل قيد</td><td class="code">JE-2026-000003</td></tr>
-                  <tr><td class="num">2026-11-26 09:52</td><td>admin</td><td>إنشاء حساب</td><td class="code">1130</td></tr>
-                  <tr><td class="num">2026-11-25 16:08</td><td>reviewer</td><td>اعتماد قيد</td><td class="code">JE-2026-000002</td></tr>
-                </tbody>
-              </table>
+            <div class="panel-head"><div class="panel-title">حالة النظام</div><div class="panel-hint">محرك Rust + SQLite</div></div>
+            <div class="details">
+              <div class="kv">
+                <div class="k">السلامة</div><div>Triggers تمنع القيد غير المتوازن وتمنع تعديل/حذف القيد المرحّل.</div>
+                <div class="k">الواجهة</div><div>معاينة في المتصفح؛ ربط حقيقي عبر Tauri Commands عند تشغيل التطبيق.</div>
+                <div class="k">البناء</div><div>exe/اختبارات Rust عبر GitHub Actions فقط.</div>
+              </div>
             </div>
           </div>
         </section>
@@ -359,6 +380,37 @@
           <div class="empty-note" id="journal-note">
             تنبيه: هذه شاشة معاينة فقط. لا يتم حفظ أي قيد، ولا يتم الاتصال بقاعدة البيانات. التنفيذ الفعلي سيستخدم `services` + `db` مع منع أي قيد غير متوازن أو ترحيل غير صالح.
           </div>
+
+          <dialog class="entry-dialog" id="entry-dialog">
+            <div class="dialog-head">
+              <div>
+                <div class="panel-title">قيد يومية جديد</div>
+                <div class="panel-hint">مسودة متوازنة — الترحيل النهائي يتم من قاعدة البيانات</div>
+              </div>
+              <button class="btn" type="button" id="btn-close-entry">إغلاق</button>
+            </div>
+            <div class="dialog-body">
+              <div class="form-grid">
+                <div class="field"><label for="entry-date">التاريخ</label><input id="entry-date" type="date"></div>
+                <div class="field"><label for="entry-currency">العملة</label><input id="entry-currency" value="EGP"></div>
+                <div class="field"><label for="entry-rate">سعر الصرف (مقياس 1,000,000)</label><input id="entry-rate" type="number" min="1" step="1" value="1000000"></div>
+                <div class="field"><label for="entry-ref-input">المرجع</label><input id="entry-ref-input" type="text" placeholder="اختياري"></div>
+                <div class="field span-2"><label for="entry-desc">الوصف</label><input id="entry-desc" type="text" placeholder="وصف القيد"></div>
+              </div>
+              <div class="table-wrap">
+                <table class="lines-editor">
+                  <thead><tr><th>الحساب</th><th>وصف السطر</th><th>مدين (أصغر وحدة)</th><th>دائن (أصغر وحدة)</th><th></th></tr></thead>
+                  <tbody id="entry-lines-editor"></tbody>
+                </table>
+              </div>
+              <button class="btn" type="button" id="btn-add-line">+ إضافة سطر</button>
+              <div class="form-error" id="entry-form-error"></div>
+            </div>
+            <div class="dialog-foot">
+              <div class="totals"><span>إجمالي مدين: <strong id="draft-debit">0.00</strong></span><span>إجمالي دائن: <strong id="draft-credit">0.00</strong></span><span>الفرق: <strong id="draft-diff">0.00</strong></span></div>
+              <div class="actions"><button class="btn primary" type="button" id="btn-save-draft">حفظ المسودة</button></div>
+            </div>
+          </dialog>
         </section>
 
         <section class="page" id="page-reports">
@@ -381,6 +433,13 @@
               <div class="panel-head" style="border-top:1px solid var(--line-soft)"><div class="panel-title">ملخص الميزانية</div><div class="panel-hint">v_balance_sheet</div></div>
               <div class="details"><div class="kv" id="bs-summary"></div></div>
             </div>
+          </div>
+          <div class="panel" style="margin-top:16px;">
+            <div class="panel-head">
+              <div><div class="panel-title">دفتر الأستاذ</div><div class="panel-hint">حركات حساب من القيود المرحلة</div></div>
+              <div class="toolbar"><select class="input" id="ledger-account" style="min-width:260px"></select><button class="btn" type="button" id="btn-load-ledger">عرض</button></div>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>القيد</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead><tbody id="ledger-body"></tbody></table></div>
           </div>
         </section>
 
@@ -517,11 +576,19 @@
       const totalCredit = e.lines.reduce((s, l) => s + (l.base_credit || 0), 0);
       const label = e.number ? `JE-${String(e.number).padStart(6,'0')}` : `مسودة #${e.id}`;
       document.getElementById('entry-ref').textContent = label;
+      const canPost = inTauri && e.status === 'draft';
+      const canVoid = inTauri && e.status === 'draft';
       document.getElementById('entry-meta').innerHTML = `
         <div class="k">التاريخ</div><div class="num">${esc(e.entry_date)}</div>
         <div class="k">الحالة</div><div>${statusPill(e.status)}</div>
         <div class="k">المستخدم</div><div>${esc(e.created_by ?? '—')}</div>
-        <div class="k">الوصف</div><div>${esc(e.description)}</div>`;
+        <div class="k">الوصف</div><div>${esc(e.description)}</div>
+        <div class="k">إجراءات</div><div class="actions">
+          <button class="btn ok" type="button" ${canPost ? '' : 'disabled'} id="btn-post-entry">ترحيل</button>
+          <button class="btn danger" type="button" ${canVoid ? '' : 'disabled'} id="btn-void-entry">إبطال مسودة</button>
+        </div>`;
+      document.getElementById('btn-post-entry')?.addEventListener('click', () => postSelectedEntry(e.id).catch(showError));
+      document.getElementById('btn-void-entry')?.addEventListener('click', () => voidSelectedEntry(e.id).catch(showError));
       document.getElementById('entry-lines').innerHTML = e.lines.map(l => `
         <tr><td><span class="code">${esc(l.account_code)}</span> — ${esc(l.account_name_ar)}</td><td class="num">${moneyCell(l.base_debit)}</td><td class="num">${moneyCell(l.base_credit)}</td></tr>
       `).join('') + `
@@ -539,14 +606,109 @@
     document.getElementById('account-search').addEventListener('input', (e) => renderAccounts(e.target.value));
     document.getElementById('btn-refresh-journal').addEventListener('click', () => refreshAll().catch(showError));
     document.getElementById('btn-refresh-reports').addEventListener('click', () => refreshReports().catch(showError));
-    document.getElementById('btn-new-entry').addEventListener('click', () => {
-      alert(inTauri ? 'إنشاء القيد من الواجهة سيُضاف في الخطوة التالية (الأمر create_draft جاهز في Tauri).' : 'معاينة المتصفح: إنشاء القيد غير متاح بدون Tauri.');
-    });
+    document.getElementById('btn-load-ledger').addEventListener('click', () => loadLedger().catch(showError));
+    document.getElementById('btn-new-entry').addEventListener('click', openEntryDialog);
+    document.getElementById('btn-close-entry').addEventListener('click', () => document.getElementById('entry-dialog').close());
+    document.getElementById('btn-add-line').addEventListener('click', () => addDraftLine());
+    document.getElementById('btn-save-draft').addEventListener('click', () => saveDraft().catch(showError));
 
     function showError(err) {
       console.error(err);
       const msg = typeof err === 'string' ? err : (err?.message || 'حدث خطأ غير متوقع');
-      alert(msg);
+      const formErr = document.getElementById('entry-form-error');
+      if (formErr && document.getElementById('entry-dialog')?.open) formErr.textContent = msg;
+      else alert(msg);
+    }
+
+    function postableAccounts() {
+      const src = inTauri ? liveAccounts : demoAccounts;
+      return src.filter(a => a.is_postable && a.is_active !== false);
+    }
+
+    function openEntryDialog() {
+      if (!inTauri) { alert('معاينة المتصفح: إنشاء القيد متاح داخل تطبيق Tauri فقط.'); return; }
+      const dlg = document.getElementById('entry-dialog');
+      document.getElementById('entry-form-error').textContent = '';
+      document.getElementById('entry-date').value = new Date().toISOString().slice(0,10);
+      document.getElementById('entry-currency').value = 'EGP';
+      document.getElementById('entry-rate').value = '1000000';
+      document.getElementById('entry-ref-input').value = '';
+      document.getElementById('entry-desc').value = '';
+      const body = document.getElementById('entry-lines-editor');
+      body.innerHTML = '';
+      addDraftLine(); addDraftLine();
+      updateDraftTotals();
+      dlg.showModal();
+    }
+
+    function addDraftLine(line = {}) {
+      const body = document.getElementById('entry-lines-editor');
+      const tr = document.createElement('tr');
+      const options = postableAccounts().map(a => `<option value="${a.id}" ${String(line.account_id)===String(a.id)?'selected':''}>${esc(a.code)} — ${esc(a.name_ar)}</option>`).join('');
+      tr.innerHTML = `
+        <td><select class="line-account"><option value="">اختر الحساب...</option>${options}</select></td>
+        <td><input class="line-desc" value="${esc(line.description||'')}" placeholder="اختياري"></td>
+        <td class="num"><input class="line-debit" type="number" min="0" step="1" value="${line.debit||0}"></td>
+        <td class="num"><input class="line-credit" type="number" min="0" step="1" value="${line.credit||0}"></td>
+        <td><button class="btn danger btn-remove-line" type="button">حذف</button></td>`;
+      tr.querySelector('.btn-remove-line').addEventListener('click', () => { tr.remove(); updateDraftTotals(); });
+      tr.querySelectorAll('input,select').forEach(el => el.addEventListener('input', updateDraftTotals));
+      body.appendChild(tr);
+      updateDraftTotals();
+    }
+
+    function collectDraft() {
+      const lines = Array.from(document.querySelectorAll('#entry-lines-editor tr')).map(tr => ({
+        account_id: Number(tr.querySelector('.line-account').value || 0),
+        description: tr.querySelector('.line-desc').value.trim() || null,
+        debit: Math.max(0, parseInt(tr.querySelector('.line-debit').value || '0', 10) || 0),
+        credit: Math.max(0, parseInt(tr.querySelector('.line-credit').value || '0', 10) || 0),
+      })).filter(l => l.account_id || l.debit || l.credit || l.description);
+      return {
+        entry_date: document.getElementById('entry-date').value,
+        description: document.getElementById('entry-desc').value.trim(),
+        reference: document.getElementById('entry-ref-input').value.trim() || null,
+        currency: document.getElementById('entry-currency').value.trim() || 'EGP',
+        exchange_rate: Math.max(1, parseInt(document.getElementById('entry-rate').value || '1000000', 10) || 1000000),
+        lines,
+      };
+    }
+
+    function updateDraftTotals() {
+      const draft = collectDraft();
+      const debit = draft.lines.reduce((s,l)=>s+l.debit,0);
+      const credit = draft.lines.reduce((s,l)=>s+l.credit,0);
+      document.getElementById('draft-debit').textContent = minorToText(debit);
+      document.getElementById('draft-credit').textContent = minorToText(credit);
+      document.getElementById('draft-diff').textContent = minorToText(Math.abs(debit-credit));
+      return {draft, debit, credit};
+    }
+
+    async function saveDraft() {
+      const { draft, debit, credit } = updateDraftTotals();
+      const err = document.getElementById('entry-form-error');
+      err.textContent = '';
+      if (!draft.description) return err.textContent = 'وصف القيد مطلوب';
+      if (draft.lines.length < 2) return err.textContent = 'أضف سطرين على الأقل';
+      if (draft.lines.some(l => !l.account_id)) return err.textContent = 'اختر حساباً لكل سطر';
+      if (draft.lines.some(l => !((l.debit>0&&l.credit===0)||(l.credit>0&&l.debit===0)))) return err.textContent = 'كل سطر يجب أن يكون مديناً أو دائناً فقط';
+      if (debit !== credit) return err.textContent = 'القيد غير متوازن';
+      await invoke('create_draft', { input: draft });
+      document.getElementById('entry-dialog').close();
+      await refreshAll();
+      alert('تم حفظ المسودة بنجاح');
+    }
+
+    async function postSelectedEntry(id) {
+      if (!inTauri || !confirm('ترحيل القيد؟ بعد الترحيل لا يمكن تعديله.')) return;
+      await invoke('post_draft', { id });
+      await refreshAll();
+    }
+
+    async function voidSelectedEntry(id) {
+      if (!inTauri || !confirm('إبطال المسودة؟')) return;
+      await invoke('void_draft', { id });
+      await refreshAll();
     }
 
     function renderReports(tb, isRows, bsRows) {
@@ -559,6 +721,29 @@
         <div class="k">حقوق الملكية</div><div class="num">${minorToText(sum('equity'))}</div>`;
     }
 
+    function fillLedgerAccounts() {
+      const src = (inTauri ? liveAccounts : demoAccounts).filter(a => a.is_postable);
+      const sel = document.getElementById('ledger-account');
+      const cur = sel.value;
+      sel.innerHTML = src.map(a => `<option value="${a.id||a.code}">${esc(a.code)} — ${esc(a.name_ar)}</option>`).join('');
+      if (cur) sel.value = cur;
+    }
+
+    async function loadLedger() {
+      const sel = document.getElementById('ledger-account');
+      const accountId = Number(sel.value || 0);
+      if (!accountId) { document.getElementById('ledger-body').innerHTML = '<tr><td colspan="6" class="dim">اختر حساباً</td></tr>'; return; }
+      if (!inTauri) {
+        document.getElementById('ledger-body').innerHTML = '<tr><td class="num">2026-11-01</td><td class="code">JE-000001</td><td>إثبات رأس المال</td><td class="num">50,000.00</td><td class="num">—</td><td class="num">50,000.00</td></tr>';
+        return;
+      }
+      const rows = await invoke('account_ledger', { accountId });
+      document.getElementById('ledger-body').innerHTML = (rows||[]).map(r => {
+        const label = r.entry_number ? `JE-${String(r.entry_number).padStart(6,'0')}` : `#${r.entry_id}`;
+        return `<tr><td class="num">${esc(r.entry_date)}</td><td class="code">${esc(label)}</td><td>${esc(r.description)}</td><td class="num">${moneyCell(r.debit)}</td><td class="num">${moneyCell(r.credit)}</td><td class="num">${minorToText(r.running_base_balance)}</td></tr>`;
+      }).join('') || '<tr><td colspan="6" class="dim">لا توجد حركات مرحلة</td></tr>';
+    }
+
     async function refreshReports() {
       if (!inTauri) {
         renderReports(
@@ -566,22 +751,35 @@
           [{code:'5100',name_ar:'مصروف الإيجار',account_type:'expense',amount:800000}],
           [{section:'asset',amount:4200000},{section:'equity',amount:5000000}]
         );
+        fillLedgerAccounts(); await loadLedger();
         return;
       }
       const [tb, isRows, bsRows] = await Promise.all([invoke('trial_balance'), invoke('income_statement'), invoke('balance_sheet_report')]);
       renderReports(tb, isRows, bsRows);
+      fillLedgerAccounts();
+      await loadLedger().catch(showError);
+    }
+
+    function refreshDashboard() {
+      const accounts = inTauri ? liveAccounts : demoAccounts;
+      const journal = inTauri ? liveJournal : demoJournal;
+      document.getElementById('dash-accounts').textContent = accounts.length;
+      document.getElementById('dash-entries').textContent = journal.length;
+      document.getElementById('dash-drafts').textContent = journal.filter(e => e.status === 'draft').length;
+      document.getElementById('dash-posted').textContent = journal.filter(e => e.status === 'posted').length;
     }
 
     async function refreshAll() {
-      if (!inTauri) { renderAccounts(); await renderJournal(); await refreshReports(); return; }
+      if (!inTauri) { renderAccounts(); await renderJournal(); await refreshReports(); refreshDashboard(); return; }
       const info = await invoke('bootstrap');
       document.querySelector('.company-name').textContent = info.company_name;
-      document.getElementById('journal-note').textContent = 'متصل بقاعدة البيانات المحلية (وضع تجريبي). أوامر الحفظ/الترحيل جاهزة في Tauri؛ نموذج الإدخال الكامل سيُضاف بعد ذلك.';
+      document.getElementById('journal-note').textContent = 'متصل بقاعدة البيانات المحلية. يمكن حفظ مسودة، ترحيل، أو إبطال مسودة؛ القيود المرحلة محمية بواسطة SQLite triggers.';
       liveAccounts = await invoke('list_accounts');
       liveJournal = await invoke('list_journal');
       renderAccounts(document.getElementById('account-search').value);
       await renderJournal();
       await refreshReports();
+      refreshDashboard();
     }
 
     (function initWindowControls() {

@@ -18,6 +18,7 @@ pub fn run() -> tauri::Result<()> {
             commands::trial_balance,
             commands::income_statement,
             commands::balance_sheet_report,
+            commands::account_ledger,
         ])
         .run(tauri::generate_context!())
 }
