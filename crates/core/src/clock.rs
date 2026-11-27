@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn converts_known_dates() {
         assert_eq!(iso8601_from_unix(1_767_225_600), "2026-01-01T00:00:00Z");
-        assert_eq!(iso8601_from_unix(1_769_817_599), "2026-02-01T23:59:59Z");
+        assert_eq!(iso8601_from_unix(1_769_990_399), "2026-02-01T23:59:59Z");
         assert_eq!(iso8601_from_unix(951_782_400), "2000-02-29T00:00:00Z");
     }
 
