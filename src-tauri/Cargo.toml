@@ -18,10 +18,3 @@ tauri = { version = "2", features = [] }
 
 [lints]
 workspace = true
-
-[profile.release]
-lto = true
-strip = true
-codegen-units = 1
-opt-level = "s"
-panic = "abort"
