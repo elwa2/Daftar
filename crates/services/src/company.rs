@@ -99,6 +99,9 @@ fn month_bounds(year: &str, month: &str) -> (String, String) {
     (start, format!("{year}-{month}-{end_day}"))
 }
 
+/// `(code, name_ar, type, normal_balance, parent_code, is_postable)`.
+type DefaultAccount<'a> = (&'a str, &'a str, &'a str, &'a str, Option<&'a str>, i64);
+
 fn ensure_default_accounts(db: &Database, now: &str) -> ServiceResult<()> {
     let count: i64 = db
         .conn
@@ -106,7 +109,7 @@ fn ensure_default_accounts(db: &Database, now: &str) -> ServiceResult<()> {
     if count > 0 {
         return Ok(());
     }
-    let accounts: &[(&str, &str, &str, &str, Option<&str>, i64)] = &[
+    let accounts: &[DefaultAccount<'_>] = &[
         ("1", "الأصول", "asset", "debit", None, 0),
         ("11", "الأصول المتداولة", "asset", "debit", Some("1"), 0),
         ("1110", "الصندوق", "asset", "debit", Some("11"), 1),
