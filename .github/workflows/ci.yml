@@ -137,11 +137,15 @@ jobs:
         run: |
           $exeDir = Join-Path $env:CARGO_TARGET_DIR "x86_64-pc-windows-gnu\debug"
           $dll = Get-ChildItem $env:CARGO_TARGET_DIR -Recurse -Filter WebView2Loader.dll -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($dll) {
+          if (-not $dll) {
+            Write-Output "No WebView2Loader.dll found; the system WebView2 runtime may be used."
+          } elseif ($dll.DirectoryName -eq $exeDir) {
+            # The loader is often emitted straight into the debug directory, and
+            # copying a file onto itself makes PowerShell fail the step.
+            Write-Output "WebView2Loader.dll is already next to the executables."
+          } else {
             Copy-Item $dll.FullName $exeDir -Force
             Write-Output "Copied $($dll.FullName)"
-          } else {
-            Write-Output "No WebView2Loader.dll found; the system WebView2 runtime may be used."
           }
 
       - name: Inspect DLL dependencies (non-fatal)
