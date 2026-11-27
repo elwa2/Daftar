@@ -310,7 +310,7 @@ fn require_read(ctx: &Context) -> ServiceResult<()> {
     if ctx.has("entries.create") || ctx.has("entries.post") || ctx.has("reports.view") {
         Ok(())
     } else {
-        ctx.require("reports.view")
+        ctx.require("reports.view").map_err(ServiceError::Core)
     }
 }
 

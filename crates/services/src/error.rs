@@ -20,6 +20,12 @@ pub enum ServiceError {
     Conflict(&'static str),
 }
 
+impl From<rusqlite::Error> for ServiceError {
+    fn from(error: rusqlite::Error) -> Self {
+        Self::Db(DbError::Sqlite(error))
+    }
+}
+
 impl ServiceError {
     /// Stable machine code.
     pub const fn code(&self) -> &'static str {
