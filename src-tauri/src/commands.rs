@@ -7,6 +7,13 @@ use crate::state::{demo_context, map_service_err, with_db, AppState};
 #[derive(Serialize)]
 pub struct BootstrapInfo {
     pub company_name: String,
+    pub company_name_en: Option<String>,
+    pub tax_id: Option<String>,
+    pub address: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub base_currency: String,
+    pub fiscal_year_name: String,
     pub fiscal_year_id: i64,
     pub fiscal_period_id: i64,
 }
@@ -86,6 +93,17 @@ pub struct DraftLineDto {
 }
 
 #[derive(serde::Deserialize)]
+pub struct UpdateCompanyDto {
+    pub name_ar: String,
+    pub name_en: Option<String>,
+    pub tax_id: Option<String>,
+    pub address: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub base_currency: String,
+}
+
+#[derive(serde::Deserialize)]
 pub struct CreateDraftDto {
     pub entry_date: String,
     pub description: String,
@@ -100,17 +118,46 @@ pub fn bootstrap(app: AppHandle, state: State<'_, AppState>) -> Result<Bootstrap
     with_db(&app, &state, |db| {
         let today = &daftar_core::clock::now_iso8601()[0..10];
         let (year_id, period_id) = company::current_period(db, today).map_err(map_service_err)?;
-        let company_name: String = db
-            .conn
-            .query_row("SELECT name_ar FROM company_info WHERE id = 1", [], |r| {
-                r.get(0)
-            })
-            .map_err(|_| "تعذر قراءة بيانات الشركة".to_owned())?;
+        let ctx = demo_context();
+        let profile = company::get_profile(db, &ctx).map_err(map_service_err)?;
+        let fiscal_year_name = company::fiscal_year_name(db, year_id).map_err(map_service_err)?;
         Ok(BootstrapInfo {
-            company_name,
+            company_name: profile.name_ar,
+            company_name_en: profile.name_en,
+            tax_id: profile.tax_id,
+            address: profile.address,
+            phone: profile.phone,
+            email: profile.email,
+            base_currency: profile.base_currency,
+            fiscal_year_name,
             fiscal_year_id: year_id,
             fiscal_period_id: period_id,
         })
+    })
+}
+
+#[tauri::command]
+pub fn update_company(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    input: UpdateCompanyDto,
+) -> Result<(), String> {
+    let ctx = demo_context();
+    with_db(&app, &state, |db| {
+        company::update_profile(
+            db,
+            &ctx,
+            company::UpdateCompanyInput {
+                name_ar: input.name_ar,
+                name_en: input.name_en,
+                tax_id: input.tax_id,
+                address: input.address,
+                phone: input.phone,
+                email: input.email,
+                base_currency: input.base_currency,
+            },
+        )
+        .map_err(map_service_err)
     })
 }
 

@@ -8,6 +8,7 @@ pub fn run() -> tauri::Result<()> {
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             commands::bootstrap,
+            commands::update_company,
             commands::list_accounts,
             commands::create_account,
             commands::list_journal,

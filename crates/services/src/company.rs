@@ -4,11 +4,11 @@
 //! base company info, a fiscal year/period, and a small default chart of
 //! accounts. This is intentionally minimal; full setup wizard comes later.
 
-use daftar_core::clock::now_iso8601;
+use daftar_core::{clock::now_iso8601, Context};
 use daftar_db::Database;
 use rusqlite::{params, OptionalExtension};
 
-use crate::error::ServiceResult;
+use crate::error::{ServiceError, ServiceResult};
 
 /// Ensures there is a company row, an open fiscal year/period covering today,
 /// and a minimal chart of accounts. Safe to call repeatedly.
@@ -27,6 +27,119 @@ pub fn bootstrap_demo(db: &Database) -> ServiceResult<()> {
     let _period_id = ensure_period(db, year_id, today, &now)?;
     ensure_default_accounts(db, &now)?;
     Ok(())
+}
+
+/// editable company data shown in the app header and settings page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompanyProfile {
+    pub name_ar: String,
+    pub name_en: Option<String>,
+    pub tax_id: Option<String>,
+    pub address: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub base_currency: String,
+}
+
+/// Input for updating the company profile.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UpdateCompanyInput {
+    pub name_ar: String,
+    pub name_en: Option<String>,
+    pub tax_id: Option<String>,
+    pub address: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub base_currency: String,
+}
+
+/// Returns the single company profile row.
+pub fn get_profile(db: &Database, ctx: &Context) -> ServiceResult<CompanyProfile> {
+    ctx.require("settings.manage")?;
+    db.conn
+        .query_row(
+            "SELECT name_ar, name_en, tax_id, address, phone, email, base_currency
+             FROM company_info WHERE id = 1",
+            [],
+            |row| {
+                Ok(CompanyProfile {
+                    name_ar: row.get(0)?,
+                    name_en: row.get(1)?,
+                    tax_id: row.get(2)?,
+                    address: row.get(3)?,
+                    phone: row.get(4)?,
+                    email: row.get(5)?,
+                    base_currency: row.get(6)?,
+                })
+            },
+        )
+        .optional()?
+        .ok_or(ServiceError::NotFound("بيانات الشركة غير موجودة"))
+}
+
+/// Updates the company profile. Name and currency are validated against the
+/// same rules used by the schema, so the UI gets an Arabic error before SQLite.
+pub fn update_profile(
+    db: &Database,
+    ctx: &Context,
+    input: UpdateCompanyInput,
+) -> ServiceResult<()> {
+    ctx.require("settings.manage")?;
+    let name_ar = input.name_ar.trim();
+    if name_ar.is_empty() {
+        return Err(ServiceError::Validation("اسم الشركة مطلوب"));
+    }
+    let base_currency = input.base_currency.trim().to_uppercase();
+    if base_currency.is_empty() {
+        return Err(ServiceError::Validation("العملة الأساسية مطلوبة"));
+    }
+    let currency_exists: bool = db.conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM currencies WHERE code = ?1 AND is_active = 1)",
+        params![base_currency],
+        |row| row.get(0),
+    )?;
+    if !currency_exists {
+        return Err(ServiceError::Validation("العملة الأساسية غير مدعومة"));
+    }
+
+    let now = now_iso8601();
+    db.set_user(Some(ctx.user_id));
+    let changed = db.conn.execute(
+        "UPDATE company_info
+         SET name_ar = ?1, name_en = ?2, tax_id = ?3, address = ?4,
+             phone = ?5, email = ?6, base_currency = ?7, updated_at = ?8
+         WHERE id = 1",
+        params![
+            name_ar,
+            clean_optional(input.name_en.as_deref()),
+            clean_optional(input.tax_id.as_deref()),
+            clean_optional(input.address.as_deref()),
+            clean_optional(input.phone.as_deref()),
+            clean_optional(input.email.as_deref()),
+            base_currency,
+            now,
+        ],
+    )?;
+    if changed == 0 {
+        return Err(ServiceError::NotFound("بيانات الشركة غير موجودة"));
+    }
+    Ok(())
+}
+
+fn clean_optional(value: Option<&str>) -> Option<&str> {
+    value.map(str::trim).filter(|value| !value.is_empty())
+}
+
+/// Returns the display name of a fiscal year.
+pub fn fiscal_year_name(db: &Database, id: i64) -> ServiceResult<String> {
+    db.conn
+        .query_row(
+            "SELECT name FROM fiscal_years WHERE id = ?1",
+            params![id],
+            |row| row.get(0),
+        )
+        .optional()?
+        .ok_or(ServiceError::NotFound("السنة المالية غير موجودة"))
 }
 
 fn ensure_fiscal_year(db: &Database, today: &str, now: &str) -> ServiceResult<i64> {
